@@ -1,0 +1,37 @@
+
+services:
+  quickbite-backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: quickbite-backend
+    restart: always
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://quickbite-db:5432/user-service
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: 1234
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+    depends_on:
+      quickbite-db:
+        condition: service_healthy
+
+  quickbite-db:
+    image: postgres:15-alpine
+    container_name: quickbite-db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 1234
+      POSTGRES_DB: user-service
+    volumes:
+      - quickbite-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d quickbite-db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  quickbite-db-data:
